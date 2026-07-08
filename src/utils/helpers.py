@@ -1,15 +1,16 @@
 import os
 import numpy as np
 import pandas as pd
-from src.utils.config import logger
+from src.utils.config import get_logger
 
 
-def load_data(file_path):
+logger, _ = get_logger(__name__)
+
+
+def load_data(file_path, **read_csv_kwargs):
     logger.info(f"Loading data from {file_path}")
     try:
-        # Do not force an index column here; different datasets may or may not
-        # contain Loan_ID as a regular column.
-        df = pd.read_csv(file_path, encoding='utf-8')
+        df = pd.read_csv(file_path, encoding="utf-8", **read_csv_kwargs)
         logger.info("Data loaded successfully.")
         return df
     except Exception as e:
