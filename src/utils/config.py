@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime
+from typing import Optional, Tuple
 
 TIMESTAMP = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 TIMESTAMP_YMD = datetime.now().strftime("%Y-%m-%d")
@@ -8,7 +9,7 @@ TIMESTAMP_YMD = datetime.now().strftime("%Y-%m-%d")
 os.makedirs(f"logs/{TIMESTAMP_YMD}/", exist_ok=True)
 
 
-def get_logger(name: str = __name__, log_filename: str | None = None) -> tuple[logging.Logger, str]:
+def get_logger(name: str = __name__, log_filename: Optional[str] = None) -> Tuple[logging.Logger, str]:
 	"""Create a stream + file logger and return both logger and log file path."""
 	if log_filename is None:
 		log_filename = f"{TIMESTAMP}.log"
