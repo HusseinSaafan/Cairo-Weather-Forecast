@@ -19,7 +19,7 @@ TRAIN_PATH = os.path.join(PROJECT_ROOT, "database", "train.csv")
 FIG_DIR = os.path.join(PROJECT_ROOT, "figures", "eda")
 TIME_COL = "time"
 TARGET_COL = "temperature_2m_mean (°C)"
-MAX_LAGS = 800
+MAX_LAGS = 90
 
 
 def main() -> None:
