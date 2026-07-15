@@ -1,4 +1,4 @@
-"""Train SARIMAX(1,0,0)x(0,0,0,365), log summary, and save diagnostics plot."""
+"""Train SARIMA on log(target), invert forecasts, and evaluate on test2 data."""
 
 import os
 import sys
@@ -28,8 +28,8 @@ EVAL_FIG_DIR = os.path.join(PROJECT_ROOT, "figures", "model_eval")
 
 def main() -> None:
 	logger, log_file = get_logger(
-		"src.modeling.SAR",
-		log_filename=f"sarima_{datetime.now():%Y%m%d_%H%M%S}.log",
+		"src.modeling.sarima_log",
+		log_filename=f"sarima_log_{datetime.now():%Y%m%d_%H%M%S}.log",
 	)
 
 	os.makedirs(FIG_DIR, exist_ok=True)
@@ -51,9 +51,14 @@ def main() -> None:
 	logger.info(f"Training rows: {len(train_series)}")
 	logger.info(f"Test rows: {len(test_series)}")
 
-	logger.info("Building SARIMAX model with order=(1,0,0), seasonal_order=(1,0,1,91)")
+	if (train_series <= 0).any() or (test_series <= 0).any():
+		raise ValueError("Log transform requires strictly positive target values in both train and test sets.")
+
+	train_log = np.log(train_series)
+
+	logger.info("Building SARIMAX model on log(target) with order=(1,0,0), seasonal_order=(1,0,1,91)")
 	sarima_model = SARIMAX(
-		train_series,
+		train_log,
 		order=(1, 0, 0),
 		seasonal_order=(1, 0, 1, 91),
 		enforce_stationarity=False,
@@ -68,7 +73,7 @@ def main() -> None:
 		PROJECT_ROOT,
 		"logs",
 		datetime.now().strftime("%Y-%m-%d"),
-		f"sarima_summary_{datetime.now():%Y%m%d_%H%M%S}.txt",
+		f"sarima_log_summary_{datetime.now():%Y%m%d_%H%M%S}.txt",
 	)
 	with open(summary_file, "w", encoding="utf-8") as f:
 		f.write(summary_text)
@@ -76,22 +81,23 @@ def main() -> None:
 	logger.info(f"Saved model summary: {summary_file}")
 
 	fig = sarima_fit.plot_diagnostics(figsize=(20, 12))
-	diag_path = os.path.join(FIG_DIR, "sarima_diagnostics.png")
+	diag_path = os.path.join(FIG_DIR, "sarima_log_diagnostics.png")
 	fig.savefig(diag_path, dpi=300)
 	plt.close(fig)
 
-	forecast = sarima_fit.forecast(steps=len(test_series))
-	forecast.index = test_series.index
+	forecast_log = sarima_fit.forecast(steps=len(test_series))
+	forecast_log.index = test_series.index
+	forecast = np.exp(forecast_log)
 
 	eval_df = pd.DataFrame(
 		{
 			"Actual": test_series,
-			"SARIMAForecasting": forecast,
+			"SARIMALogForecasting": forecast,
 		}
 	)
 
-	mse = mean_squared_error(eval_df["Actual"], eval_df["SARIMAForecasting"])
-	mae = mean_absolute_error(eval_df["Actual"], eval_df["SARIMAForecasting"])
+	mse = mean_squared_error(eval_df["Actual"], eval_df["SARIMALogForecasting"])
+	mae = mean_absolute_error(eval_df["Actual"], eval_df["SARIMALogForecasting"])
 	rmse = np.sqrt(mse)
 
 	logger.info("Evaluation metrics")
@@ -107,25 +113,25 @@ def main() -> None:
 	ax.plot(eval_df.index, eval_df["Actual"], label="Actual", color="blue")
 	ax.plot(
 		eval_df.index,
-		eval_df["SARIMAForecasting"],
-		label="SARIMAForecasting",
+		eval_df["SARIMALogForecasting"],
+		label="SARIMALogForecasting",
 		color="red",
 		linestyle="--",
 	)
 	ax.legend()
-	ax.set_title("Actual vs Predicted")
+	ax.set_title("Actual vs Predicted (SARIMA on log target)")
 	ax.set_xlabel("Date")
 	ax.set_ylabel(TARGET_COL)
 	fig_eval.tight_layout()
 
-	eval_plot_path = os.path.join(EVAL_FIG_DIR, "sarima_actual_vs_predicted.png")
+	eval_plot_path = os.path.join(EVAL_FIG_DIR, "sarima_log_actual_vs_predicted.png")
 	fig_eval.savefig(eval_plot_path, dpi=300)
 	plt.close(fig_eval)
 
 	logger.info(f"Saved diagnostics plot: {diag_path}")
 	logger.info(f"Saved evaluation plot: {eval_plot_path}")
 	logger.info(f"Log file: {log_file}")
-	logger.info("SAR modeling + evaluation script complete")
+	logger.info("SARIMA-log modeling + evaluation script complete")
 
 
 if __name__ == "__main__":
