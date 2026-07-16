@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-07-16T13:44:20",
+  "selection_metric": "rmse",
+  "results": [
+    {
+      "model": "prophet",
+      "mse": 4.658061207401538,
+      "mae": 1.6455561195235637,
+      "rmse": 2.158254203610302,
+      "artifact_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/prophet.pkl"
+    },
+    {
+      "model": "man_sarima",
+      "mse": 9.196123416675892,
+      "mae": 2.430262821077115,
+      "rmse": 3.0325110744523083,
+      "artifact_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/man_sarima.pkl"
+    },
+    {
+      "model": "man_sarima_log",
+      "mse": 9.232498699988685,
+      "mae": 2.434793927220379,
+      "rmse": 3.038502706924693,
+      "artifact_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/man_sarima_log.pkl"
+    },
+    {
+      "model": "auto_arima",
+      "mse": 41.856654547930454,
+      "mae": 5.425143214646145,
+      "rmse": 6.469671904195023,
+      "artifact_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/auto_arima.pkl"
+    },
+    {
+      "model": "auto_arima_log",
+      "mse": 51.04596361170603,
+      "mae": 5.818699598672458,
+      "rmse": 7.1446458002973126,
+      "artifact_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/auto_arima_log.pkl"
+    },
+    {
+      "model": "sarima_log",
+      "mse": 230.43350273625973,
+      "mae": 13.729521168849224,
+      "rmse": 15.180036321967735,
+      "artifact_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/sarima_log.pkl"
+    },
+    {
+      "model": "sarima",
+      "mse": 311.33046980551427,
+      "mae": 16.305973267190296,
+      "rmse": 17.644559212559386,
+      "artifact_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/sarima.pkl"
+    }
+  ],
+  "champion": {
+    "model": "prophet",
+    "rmse": 2.158254203610302,
+    "mae": 1.6455561195235637,
+    "mse": 4.658061207401538,
+    "source_artifact": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/prophet.pkl",
+    "champ_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/champ.pkl"
+  }
+}

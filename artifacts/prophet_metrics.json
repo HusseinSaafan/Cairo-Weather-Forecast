@@ -1,0 +1,8 @@
+{
+  "model": "prophet",
+  "mse": 4.658061207401538,
+  "mae": 1.6455561195235637,
+  "rmse": 2.158254203610302,
+  "artifact_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/prophet.pkl",
+  "metrics_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/prophet_metrics.json"
+}

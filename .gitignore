@@ -8,3 +8,9 @@ __pycache__/
 *.pyo
 *.pyd
 keep.py
+keep/
+
+# Model binaries
+artifacts/*.pkl
+venv/
+.DS_Store

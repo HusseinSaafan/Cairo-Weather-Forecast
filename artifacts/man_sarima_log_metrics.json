@@ -1,0 +1,8 @@
+{
+  "model": "man_sarima_log",
+  "mse": 9.232498699988685,
+  "mae": 2.434793927220379,
+  "rmse": 3.038502706924693,
+  "artifact_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/man_sarima_log.pkl",
+  "metrics_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/man_sarima_log_metrics.json"
+}

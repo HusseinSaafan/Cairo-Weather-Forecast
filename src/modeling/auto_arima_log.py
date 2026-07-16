@@ -1,8 +1,11 @@
 """Train Auto-ARIMA on log(target), invert forecasts, and evaluate on test data."""
 
 import os
+import json
+import pickle
 import sys
 from datetime import datetime
+from typing import Any, Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,24 +22,18 @@ from src.utils.helpers import load_data
 
 
 TRAIN_PATH = os.path.join(PROJECT_ROOT, "database", "train.csv")
-TEST2_PATH = os.path.join(PROJECT_ROOT, "database", "test2.csv")
 TEST_PATH = os.path.join(PROJECT_ROOT, "database", "test.csv")
 TIME_COL = "time"
 TARGET_COL = "temperature_2m_mean (°C)"
 FIG_DIR = os.path.join(PROJECT_ROOT, "figures", "modeling")
 EVAL_FIG_DIR = os.path.join(PROJECT_ROOT, "figures", "model_eval")
 SEASONAL_PERIOD = 30
+ARTIFACTS_DIR = os.path.join(PROJECT_ROOT, "artifacts")
+MODEL_ARTIFACT_PATH = os.path.join(ARTIFACTS_DIR, "auto_arima_log.pkl")
+METRICS_ARTIFACT_PATH = os.path.join(ARTIFACTS_DIR, "auto_arima_log_metrics.json")
 
 
-def _resolve_test_path() -> str:
-	if os.path.exists(TEST2_PATH):
-		return TEST2_PATH
-	if os.path.exists(TEST_PATH):
-		return TEST_PATH
-	raise FileNotFoundError(f"No test file found. Expected one of: {TEST2_PATH}, {TEST_PATH}")
-
-
-def main() -> None:
+def main() -> Dict[str, Any]:
 	logger, log_file = get_logger(
 		"src.modeling.auto_arima_log",
 		log_filename=f"auto_arima_log_{datetime.now():%Y%m%d_%H%M%S}.log",
@@ -45,13 +42,11 @@ def main() -> None:
 	os.makedirs(FIG_DIR, exist_ok=True)
 	os.makedirs(EVAL_FIG_DIR, exist_ok=True)
 
-	resolved_test_path = _resolve_test_path()
-
 	logger.info("Loading train/test data")
 	train_df = load_data(TRAIN_PATH, parse_dates=[TIME_COL], index_col=TIME_COL)
-	test_df = load_data(resolved_test_path, parse_dates=[TIME_COL], index_col=TIME_COL)
+	test_df = load_data(TEST_PATH, parse_dates=[TIME_COL], index_col=TIME_COL)
 	if train_df is None or test_df is None:
-		raise RuntimeError(f"Could not load train/test data from: {TRAIN_PATH}, {resolved_test_path}")
+		raise RuntimeError(f"Could not load train/test data from: {TRAIN_PATH}, {TEST_PATH}")
 
 	if TARGET_COL not in train_df.columns:
 		raise ValueError(f"Missing required column in train data: {TARGET_COL}")
@@ -92,6 +87,10 @@ def main() -> None:
 	)
 
 	logger.info(f"Selected model order={model.order}, seasonal_order={model.seasonal_order}")
+	os.makedirs(ARTIFACTS_DIR, exist_ok=True)
+	with open(MODEL_ARTIFACT_PATH, "wb") as f:
+		pickle.dump(model, f)
+	logger.info(f"Saved model artifact: {MODEL_ARTIFACT_PATH}")
 
 	summary_file = os.path.join(
 		PROJECT_ROOT,
@@ -155,6 +154,20 @@ def main() -> None:
 	logger.info(f"Saved evaluation plot: {eval_plot_path}")
 	logger.info(f"Log file: {log_file}")
 	logger.info("Auto-ARIMA-log modeling + evaluation script complete")
+
+	metrics: Dict[str, Any] = {
+		"model": "auto_arima_log",
+		"mse": float(mse),
+		"mae": float(mae),
+		"rmse": float(rmse),
+		"artifact_path": MODEL_ARTIFACT_PATH,
+		"metrics_path": METRICS_ARTIFACT_PATH,
+	}
+	with open(METRICS_ARTIFACT_PATH, "w", encoding="utf-8") as f:
+		json.dump(metrics, f, indent=2)
+	logger.info(f"Saved metrics artifact: {METRICS_ARTIFACT_PATH}")
+
+	return metrics
 
 
 if __name__ == "__main__":

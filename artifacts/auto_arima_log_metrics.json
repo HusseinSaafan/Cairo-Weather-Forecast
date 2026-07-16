@@ -1,0 +1,8 @@
+{
+  "model": "auto_arima_log",
+  "mse": 51.04596361170603,
+  "mae": 5.818699598672458,
+  "rmse": 7.1446458002973126,
+  "artifact_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/auto_arima_log.pkl",
+  "metrics_path": "/Users/saafan/Desktop/Cairo-Weather-Forecast/artifacts/auto_arima_log_metrics.json"
+}

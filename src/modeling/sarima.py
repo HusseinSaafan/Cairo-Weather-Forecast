@@ -1,8 +1,11 @@
 """Train SARIMAX(1,0,0)x(0,0,0,365), log summary, and save diagnostics plot."""
 
 import os
+import json
+import pickle
 import sys
 from datetime import datetime
+from typing import Any, Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,14 +22,17 @@ from src.utils.helpers import load_data
 
 
 TRAIN_PATH = os.path.join(PROJECT_ROOT, "database", "train.csv")
-TEST_PATH = os.path.join(PROJECT_ROOT, "database", "test2.csv")
+TEST_PATH = os.path.join(PROJECT_ROOT, "database", "test.csv")
 TIME_COL = "time"
 TARGET_COL = "temperature_2m_mean (°C)"
 FIG_DIR = os.path.join(PROJECT_ROOT, "figures", "modeling")
 EVAL_FIG_DIR = os.path.join(PROJECT_ROOT, "figures", "model_eval")
+ARTIFACTS_DIR = os.path.join(PROJECT_ROOT, "artifacts")
+MODEL_ARTIFACT_PATH = os.path.join(ARTIFACTS_DIR, "sarima.pkl")
+METRICS_ARTIFACT_PATH = os.path.join(ARTIFACTS_DIR, "sarima_metrics.json")
 
 
-def main() -> None:
+def main() -> Dict[str, Any]:
 	logger, log_file = get_logger(
 		"src.modeling.SAR",
 		log_filename=f"sarima_{datetime.now():%Y%m%d_%H%M%S}.log",
@@ -62,6 +68,10 @@ def main() -> None:
 
 	sarima_fit = sarima_model.fit(disp=False)
 	logger.info("Model fitting complete")
+	os.makedirs(ARTIFACTS_DIR, exist_ok=True)
+	with open(MODEL_ARTIFACT_PATH, "wb") as f:
+		pickle.dump(sarima_fit, f)
+	logger.info(f"Saved model artifact: {MODEL_ARTIFACT_PATH}")
 
 	summary_text = sarima_fit.summary().as_text()
 	summary_file = os.path.join(
@@ -126,6 +136,20 @@ def main() -> None:
 	logger.info(f"Saved evaluation plot: {eval_plot_path}")
 	logger.info(f"Log file: {log_file}")
 	logger.info("SAR modeling + evaluation script complete")
+
+	metrics: Dict[str, Any] = {
+		"model": "sarima",
+		"mse": float(mse),
+		"mae": float(mae),
+		"rmse": float(rmse),
+		"artifact_path": MODEL_ARTIFACT_PATH,
+		"metrics_path": METRICS_ARTIFACT_PATH,
+	}
+	with open(METRICS_ARTIFACT_PATH, "w", encoding="utf-8") as f:
+		json.dump(metrics, f, indent=2)
+	logger.info(f"Saved metrics artifact: {METRICS_ARTIFACT_PATH}")
+
+	return metrics
 
 
 if __name__ == "__main__":

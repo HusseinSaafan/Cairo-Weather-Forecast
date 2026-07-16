@@ -7,8 +7,11 @@ Manual seasonality approach:
 """
 
 import os
+import json
+import pickle
 import sys
 from datetime import datetime
+from typing import Any, Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,15 +28,18 @@ from src.utils.helpers import load_data
 
 
 TRAIN_PATH = os.path.join(PROJECT_ROOT, "database", "train.csv")
-TEST_PATH = os.path.join(PROJECT_ROOT, "database", "test2.csv")
+TEST_PATH = os.path.join(PROJECT_ROOT, "database", "test.csv")
 TIME_COL = "time"
 TARGET_COL = "temperature_2m_mean (°C)"
 SEASONAL_PERIOD = 365
 FIG_DIR = os.path.join(PROJECT_ROOT, "figures", "modeling")
 EVAL_FIG_DIR = os.path.join(PROJECT_ROOT, "figures", "model_eval")
+ARTIFACTS_DIR = os.path.join(PROJECT_ROOT, "artifacts")
+MODEL_ARTIFACT_PATH = os.path.join(ARTIFACTS_DIR, "man_sarima.pkl")
+METRICS_ARTIFACT_PATH = os.path.join(ARTIFACTS_DIR, "man_sarima_metrics.json")
 
 
-def main() -> None:
+def main() -> Dict[str, Any]:
 	logger, log_file = get_logger(
 		"src.modeling.man_sarima",
 		log_filename=f"man_sarima_{datetime.now():%Y%m%d_%H%M%S}.log",
@@ -77,6 +83,10 @@ def main() -> None:
 
 	arima_fit = arima_model.fit(disp=False)
 	logger.info("Model fitting complete")
+	os.makedirs(ARTIFACTS_DIR, exist_ok=True)
+	with open(MODEL_ARTIFACT_PATH, "wb") as f:
+		pickle.dump(arima_fit, f)
+	logger.info(f"Saved model artifact: {MODEL_ARTIFACT_PATH}")
 
 	summary_text = arima_fit.summary().as_text()
 	summary_file = os.path.join(
@@ -149,6 +159,20 @@ def main() -> None:
 	logger.info(f"Saved evaluation plot: {eval_plot_path}")
 	logger.info(f"Log file: {log_file}")
 	logger.info("Manual seasonal differencing ARIMA script complete")
+
+	metrics: Dict[str, Any] = {
+		"model": "man_sarima",
+		"mse": float(mse),
+		"mae": float(mae),
+		"rmse": float(rmse),
+		"artifact_path": MODEL_ARTIFACT_PATH,
+		"metrics_path": METRICS_ARTIFACT_PATH,
+	}
+	with open(METRICS_ARTIFACT_PATH, "w", encoding="utf-8") as f:
+		json.dump(metrics, f, indent=2)
+	logger.info(f"Saved metrics artifact: {METRICS_ARTIFACT_PATH}")
+
+	return metrics
 
 
 if __name__ == "__main__":
